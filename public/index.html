@@ -1,0 +1,142 @@
+<html>
+  <head>
+    <title>Moonbase Mayhem</title>
+    <script type="text/javascript" src="/easel.js"></script>
+    <script type="text/javascript" src="/jquery.js"></script>
+    <script type="text/javascript" src="/nowjs/now.js"></script>
+    <script>
+      var players = {};
+      var jewels = {};
+
+      var canvas;
+      var stage;
+
+      var directions = {
+        37: "left",
+        38: "up",
+        39: "right",
+        40: "down"
+      }
+
+      $(document).ready(function() {
+        context = $('#field')[0].getContext('2d');
+        
+        $("#field").keydown(function(e) {
+          e.preventDefault();
+          if (e.which in directions)
+            now.moveCharacter(directions[e.which])
+        });
+
+        canvas = document.getElementById("field");
+        stage = new Stage(canvas);
+        stage.addChild(new Bitmap("background.jpg"));
+        Ticker.addListener(window);
+      });
+
+      tick = function(ev) {
+        stage.update();
+      }
+
+      now.populateStage = function(data) {
+        for (var p in data.players)
+          now.addPlayer(data.players[p]);
+
+        for (var j in data.jewels)
+          now.addJewel(data.jewels[j]);
+      }
+
+      now.adjustStage = function(pid, x, y)  {
+        players[pid].x = x;
+        players[pid].y = y;
+      }
+
+      now.addPlayer = function(p) {
+        var art = p.id == now.core.clientId ? "player" : "character";
+        var newPlayer = new Bitmap(art + ".png");
+        newPlayer.x = p.x;
+        newPlayer.y = p.y;
+
+        players[p.id] = newPlayer;
+        stage.addChild(newPlayer);
+      }
+
+      now.addJewel = function(j) {
+        var newJewel = new Bitmap("ruby.png");
+        newJewel.x = j.x;
+        newJewel.y = j.y;
+
+        jewels[j.id] = newJewel; 
+        stage.addChild(newJewel);
+      }
+
+      now.removePlayer = function(id) {
+        stage.removeChild(players[id]);
+        delete players[id];
+      }
+
+      now.removeJewel = function(id) {
+        stage.removeChild(jewels[id]);
+        delete jewels[id];
+      }
+
+      now.incrementScore = function(points) {
+        $("#score")[0].innerHTML = "Jewels collected: " + points;
+      }
+
+      now.updateScoreRoster = function(data) {
+        $("#highscores")[0].innerHTML = "";
+        data.forEach(function(i) {
+          var line = "<li>" + i[0] + ": " + i[1] + "</li>";
+          $("#highscores").append(line);
+        });
+      }
+
+      function setName() {
+        now.nameChanged($("#namebox")[0].value);
+      }
+    </script>
+    
+    <style>
+      body {
+        background: black;
+        color: white;
+        font-family: "Helvetica", "Arial";
+        font-size: 18px;
+        margin: 15px;
+      }
+
+      #container {
+        border: 3px solid red;
+        width: 800px;
+        height: 600px;
+      }
+
+      #namebox {
+        width: 200px;
+      }
+    </style>
+  </head>
+  <body>
+    <img src="/header.png" />
+
+    <p>Newt Gingrich wants to build a base on the moon, but he needs your help!
+    Use the arrow keys to collect jewels so that Newt can afford to build his
+    moonbase. The red Newt is you, the other Newts are your opponents.
+    Compete to see who can collect the most jewels.
+    </p>
+
+    <p>Type your name here:
+      <input onchange="setName()" id="namebox" type="text" value="">
+    </p>
+
+    <div id="container">
+      <canvas id="field" width="800" height="600" tabindex="1"></canvas>
+    </div>
+
+    <p id="score">Jewels collected: 0</p>
+
+    <h3>High Scores</h3>
+    <ol id="highscores"></ol>
+
+  </body>
+</html>
